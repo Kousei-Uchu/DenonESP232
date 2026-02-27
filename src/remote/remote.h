@@ -23,7 +23,7 @@ class Denon232Remote : public remote_transmitter::RemoteTransmitterBase {
   std::vector<std::string> get_command_list() const;
 
  protected:
-  Denon232Receiver *receiver_;
+  Denon232Receiver *receiver_ = nullptr;
 
  private:
   std::map<std::string, std::string> command_mapping_;
