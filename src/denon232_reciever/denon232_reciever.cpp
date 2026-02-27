@@ -1,4 +1,4 @@
-#include "denon232_receiver.h"
+#include "denon232_reciever.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -227,9 +227,13 @@ void Denon232Receiver::volume_down() {
 }
 
 void Denon232Receiver::set_volume(uint8_t volume) {
-  char cmd[16];
-  snprintf(cmd, sizeof(cmd), "MV%02d", volume);
-  serial_command(cmd);
+    if (volume > volume_max_) {
+        ESP_LOGW(TAG, "Volume %d exceeds max %d, clamping", volume, volume_max_);
+        volume = volume_max_;
+    }
+    char cmd[16];
+    snprintf(cmd, sizeof(cmd), "MV%02d", volume);
+    serial_command(std::string(cmd));
 }
 
 uint8_t Denon232Receiver::get_volume() {
@@ -248,14 +252,14 @@ uint8_t Denon232Receiver::get_volume() {
 uint8_t Denon232Receiver::get_volume_max() {
   std::string response = serial_command("MV?", true);
   
-  if (response.find("MVMAX") != std::string::npos) {
-    try {
-      volume_max_ = std::stoi(response.substr(6, 2));
-    } catch (...) {
-      volume_max_ = 60;
+  if (response.find("MVMAX") != std::string::npos && response.length() >= 8) {
+        try {
+            volume_max_ = std::stoi(response.substr(6, 2));
+        } catch (...) {
+            volume_max_ = 60;
+        }
     }
-  }
-  return volume_max_;
+    return volume_max_;
 }
 
 // Mute commands
