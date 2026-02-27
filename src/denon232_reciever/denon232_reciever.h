@@ -99,7 +99,7 @@ class Denon232Receiver : public Component {
   float get_setup_priority() const override;
 
  protected:
-  uart::UARTComponent *uart_;
+  uart::UARTComponent *uart_ = nullptr;
   CableMode cable_mode_ = CableMode::NULL_MODEM;
   uint8_t volume_max_ = 60;
   uint32_t last_poll_ = 0;
