@@ -15,10 +15,6 @@ void Denon232DebugMonitor::setup() {
 }
 
 void Denon232DebugMonitor::loop() {
-  // Continuous monitoring could be added here
-}
-
-void Denon232DebugMonitor::update() {
   // Periodic diagnostics could be printed here
   if (track_state_) {
     // Could periodically log state info

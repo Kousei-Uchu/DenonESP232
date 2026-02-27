@@ -1,0 +1,59 @@
+esphome:
+  name: my-denon-controller
+  friendly_name: "Denon Receiver Controller"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  ap:
+    ssid: "Denon-Fallback"
+    password: "denonfallback"
+
+captive_portal:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 15min
+
+logger:
+  level: DEBUG
+  logs:
+    denon232: DEBUG
+    denon232.media_player: DEBUG
+
+web_server:
+  port: 80
+  version: 3
+
+uart:
+  id: denon232_uart
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+
+denon232:
+  id: my_denon
+  uart_id: denon232_uart
+  cable_mode: pass_through
+
+media_player:
+  - platform: denon232
+    id: denon_receiver
+    name: "Denon Receiver"
+    denon232_id: my_denon
+    polling_interval: 5000

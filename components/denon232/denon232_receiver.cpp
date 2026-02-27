@@ -1,4 +1,4 @@
-#include "denon232_reciever.h"
+#include "denon232_receiver.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -82,16 +82,6 @@ void Denon232Receiver::setup() {
 }
 
 void Denon232Receiver::loop() {
-  // Check for unsolicited responses from receiver
-  while (uart_->available()) {
-    std::string response = read_response_line_();
-    if (!response.empty()) {
-      process_unsolicited_response_(response);
-    }
-  }
-}
-
-void Denon232Receiver::update() {
   uint32_t now = millis();
   if (now - last_poll_ > poll_interval_) {
     last_poll_ = now;
@@ -102,6 +92,14 @@ void Denon232Receiver::update() {
     get_volume();
     get_mute_state();
     get_source();
+  }
+
+  // Check for unsolicited responses from receiver
+  while (uart_->available()) {
+    std::string response = read_response_line_();
+    if (!response.empty()) {
+      process_unsolicited_response_(response);
+    }
   }
 }
 
@@ -124,25 +122,27 @@ std::string Denon232Receiver::read_response_line_() {
   std::string line;
   uint32_t start_time = millis();
   const uint32_t timeout_ms = 500;
-  
+
   if (!uart_) {
     return line;
   }
-  
+
   while (millis() - start_time < timeout_ms) {
     if (uart_->available()) {
-      uint8_t byte = uart_->read();
-      
-      if (byte == '\r' || byte == '\n') {
-        if (!line.empty()) {
-          return line;
+      uint8_t byte;
+
+      if (uart_->read_byte(&byte)) {
+        if (byte == '\r' || byte == '\n') {
+          if (!line.empty()) {
+            return line;
+          }
+        } else if (byte >= 32 && byte < 127) {
+          line += static_cast<char>(byte);
         }
-      } else if (byte >= 32 && byte < 127) {
-        line += (char)byte;
       }
     }
   }
-  
+
   return line;
 }
 
@@ -238,28 +238,24 @@ void Denon232Receiver::set_volume(uint8_t volume) {
 
 uint8_t Denon232Receiver::get_volume() {
   std::string response = serial_command("MV?", true);
-  
-  if (response.length() >= 2 && response.substr(0, 2) == "MV") {
-    try {
-      return std::stoi(response.substr(2));
-    } catch (...) {
-      return 0;
-    }
+
+  if (response.length() >= 4 && response.substr(0, 2) == "MV") {
+    return static_cast<uint8_t>(atoi(response.substr(2).c_str()));
   }
+
   return 0;
 }
 
 uint8_t Denon232Receiver::get_volume_max() {
   std::string response = serial_command("MV?", true);
-  
+
   if (response.find("MVMAX") != std::string::npos && response.length() >= 8) {
-        try {
-            volume_max_ = std::stoi(response.substr(6, 2));
-        } catch (...) {
-            volume_max_ = 60;
-        }
-    }
-    return volume_max_;
+    volume_max_ = static_cast<uint8_t>(atoi(response.substr(6, 2).c_str()));
+  } else {
+    volume_max_ = 60;
+  }
+
+  return volume_max_;
 }
 
 // Mute commands

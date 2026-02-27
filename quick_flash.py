@@ -94,8 +94,16 @@ def create_config(device_name: str, board: str = "esp32dev") -> str:
     config_content = f"""esphome:
   name: {device_name}
   friendly_name: "Denon Receiver Controller"
-  platform: esp32
+
+esp32:
   board: {board}
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: components
 
 wifi:
   ssid: !secret wifi_ssid
@@ -111,9 +119,6 @@ api:
   encryption:
     key: !secret api_encryption_key
   reboot_timeout: 15min
-
-ota:
-  password: !secret ota_password
 
 logger:
   level: DEBUG
@@ -135,13 +140,15 @@ uart:
   stop_bits: 1
 
 denon232:
+  id: my_denon
   uart_id: denon232_uart
-  cable_mode: null_modem
+  cable_mode: pass_through
 
 media_player:
   - platform: denon232
     id: denon_receiver
     name: "Denon Receiver"
+    denon232_id: my_denon
     polling_interval: 5000
 """
     

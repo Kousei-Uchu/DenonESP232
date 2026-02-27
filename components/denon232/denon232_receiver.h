@@ -95,7 +95,6 @@ class Denon232Receiver : public Component {
 
   void setup() override;
   void loop() override;
-  void update() override;
   float get_setup_priority() const override;
 
  protected:

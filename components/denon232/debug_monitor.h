@@ -39,7 +39,6 @@ class Denon232DebugMonitor : public Component {
   
   void setup() override;
   void loop() override;
-  void update() override;
   float get_setup_priority() const override;
   
   // Get diagnostic info
