@@ -106,18 +106,18 @@ std::string Denon232WebServer::build_status_json_() {
   json += "{";
   
   std::string power = receiver_->get_power_state();
-  json += R"("power":")" + (power == "PWON" ? std::string("on") : std::string("standby")) + R"(",";
+  json += R"("power":")" + (power == "PWON" ? std::string("on") : std::string("standby")) + R"(",")";
   
   uint8_t volume = receiver_->get_volume();
   uint8_t max_vol = receiver_->get_volume_max();
   uint8_t volume_percent = (volume * 100) / max_vol;
-  json += R"("volume":)" + std::to_string(volume_percent) + R"(,";
+  json += R"("volume":)" + std::to_string(volume_percent) + R"(,")";
   
   bool muted = receiver_->get_mute_state();
-  json += R"("muted":)" + std::string(muted ? "true" : "false") + R"(,";
+  json += R"("muted":)" + std::string(muted ? "true" : "false") + R"(,")";
   
   std::string source = receiver_->get_source();
-  json += R"("source":")" + source + R"("";
+  json += R"("source":")" + source + R"("")";
   
   json += "}";
   return json;
