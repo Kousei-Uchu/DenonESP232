@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import media_player
 from esphome.const import CONF_ID, CONF_NAME
 
-from .. import denon232_ns, Denon232Receiver, CONF_CABLE_MODE, CABLE_MODES
+from . import denon232_ns, Denon232Receiver, CONF_CABLE_MODE, CABLE_MODES
 
 Denon232MediaPlayer = denon232_ns.class_("Denon232MediaPlayer", media_player.MediaPlayer, cg.Component)
 

@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import web_server
 from esphome.const import CONF_ID
 
-from .. import denon232_ns, Denon232Receiver
+from . import denon232_ns, Denon232Receiver
 
 Denon232WebServer = denon232_ns.class_("Denon232WebServer", cg.Component)
 
