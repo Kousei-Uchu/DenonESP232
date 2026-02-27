@@ -71,14 +71,21 @@ def select_serial_port() -> Optional[str]:
     for i, (port, desc) in enumerate(ports, 1):
         print(f"  {i}. {Colors.CYAN}{port}{Colors.END} - {desc}")
     
-    while True:
+    max_attempts = 3
+    attempts = 0
+    while attempts < max_attempts:
         try:
             choice = int(input(f"\n{Colors.YELLOW}Select port (1-{len(ports)}): {Colors.END}"))
             if 1 <= choice <= len(ports):
                 return ports[choice - 1][0]
+            else:
+                print(f"{Colors.RED}Please select a number between 1 and {len(ports)}{Colors.END}")
         except ValueError:
-            pass
-        print(f"{Colors.RED}Invalid selection{Colors.END}")
+            print(f"{Colors.RED}Invalid input. Please enter a number.{Colors.END}")
+        attempts += 1
+    
+    print(f"{Colors.RED}Too many invalid attempts. Exiting.{Colors.END}")
+    return None
 
 def create_config(device_name: str, board: str = "esp32dev") -> str:
     """Create ESPHome configuration"""
