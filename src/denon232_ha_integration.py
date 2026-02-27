@@ -3,11 +3,10 @@ import logging
 from typing import Any, Dict, Optional
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +33,7 @@ class Denon232ConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({
             vol.Required(CONF_NAME, default="Denon Receiver"): cv.string,
             vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional("cable_mode", default="null_modem"): vol.In(
                 ["null_modem", "pass_through"]
             ),
@@ -55,17 +55,21 @@ class Denon232ConfigFlow(ConfigFlow, domain=DOMAIN):
         return Denon232OptionsFlow(config_entry)
 
 
-class Denon232OptionsFlow(vol.Schema):
+class Denon232OptionsFlow(OptionsFlow):
     """Handle options flow for ESPDenon232."""
 
     def __init__(self, config_entry: ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, **user_input}
+            )
+            return self.async_abort(reason="reconfigure_successful")
 
         options_schema = vol.Schema({
             vol.Optional(
@@ -85,3 +89,24 @@ class Denon232OptionsFlow(vol.Schema):
                 "cable_info": "Null Modem: Standard cable with twisted pairs. Pass-Through: Straight cable."
             }
         )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Denon232 from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        "host": entry.data[CONF_HOST],
+        "port": entry.data.get(CONF_PORT, DEFAULT_PORT),
+        "cable_mode": entry.data.get("cable_mode", "null_modem"),
+        "polling_interval": entry.data.get("polling_interval", 5000)
+    }
+    
+    await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, ["media_player"]):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
